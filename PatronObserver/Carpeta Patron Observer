@@ -1,1 +1,90 @@
+import java.util.List;
+import java.util.ArrayList;
+
+
+interface DocumentObserver {
+    void update(DocumentJob job, String message);
+}
+
+
+interface DocumentSubject {
+    void addObserver(DocumentObserver observer);
+    void removeObserver(DocumentObserver observer);
+    void notifyObservers(DocumentJob job, String message);
+}
+
+
+class DocumentProcessor implements DocumentSubject {
+
+    private List<DocumentObserver> observers = new ArrayList<>();
+
+
+    public void addObserver(DocumentObserver observer) {
+        observers.add(observer);
+    }
+
+
+    public void removeObserver(DocumentObserver observer) {
+        observers.remove(observer);
+    }
+
+
+    public void notifyObservers(DocumentJob job, String message) {
+        for (DocumentObserver obs : observers) {
+            obs.update(job, message);
+        }
+    }
+
+    public void processDocument(DocumentJob job) {
+        // Simulación de procesamiento
+        System.out.println("Procesando documento...");
+        
+
+        if (job.getRequestingUser() == null) {
+            notifyObservers(job, "Error: Usuario no especificado.");
+            return;
+        }
+
+
+        notifyObservers(job, "Procesamiento completado con éxito");
+    }
+}
+
+class EmailNotifier implements DocumentObserver {
+    @Override
+    public void update(DocumentJob job, String message) {
+        System.out.println("📧 Enviando email a " + job.getUserEmail() + ": " + message);
+    }
+}
+
+
+class SlackNotifier implements DocumentObserver {
+    @Override
+    public void update(DocumentJob job, String message) {
+        System.out.println("💬 Enviando mensaje a Slack: " + message);
+    }
+}
+
+
+public class Main {
+    public static void main(String[] args) {
+
+        User user = new User();
+        user.setUsername("juan");
+        user.setPlan("Premium");
+
+        DocumentJob job = new DocumentJob("archivo.txt", "PDF", null, false, user);
+        job.setUserEmail("juan@test.com");
+
+
+        DocumentProcessor processor = new DocumentProcessor();
+
+
+        processor.addObserver(new EmailNotifier());
+        processor.addObserver(new SlackNotifier());
+
+
+        processor.processDocument(job);
+    }
+}
 
